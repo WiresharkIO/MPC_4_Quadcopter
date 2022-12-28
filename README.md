@@ -1,7 +1,7 @@
 # Flight-Control
 This repository contains information and contents for flight control.
 
-![image](https://user-images.githubusercontent.com/14985440/209778867-52d37132-7951-4b46-884c-168455b08a79.png =250x250)
+<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
 
 
 The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
