@@ -1,7 +1,7 @@
 # Flight-Control
 This repository contains information and contents for flight control.
 
-The Theory-Notes updated are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
+The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
 
 DONE:
 - simple visualization of controls on flight path but without considering exact eqautions.
