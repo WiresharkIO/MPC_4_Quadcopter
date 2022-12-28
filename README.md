@@ -12,7 +12,7 @@ DONE:
 - Simple visualization of controls on flight path but without considering exact equations.
 
 TODO:
-- Visualize with motion equations, without MPC (50% completed).
+- Visualize with motion equations, without MPC (80% completed).
 - Implement controls with MPC.
 
 #####################################################################################
