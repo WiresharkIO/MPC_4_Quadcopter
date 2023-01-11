@@ -11,7 +11,8 @@ The theory notes in this repository are self explanatory but requires prior know
 DONE:
 - Simple visualization of controls on flight path but without considering exact equations.
 - Visualize with motion equations
+
 TODO:
 - Implement controls with MPC (80% completed).
 
-#####################################################################################
+####################################################################################
