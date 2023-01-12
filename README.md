@@ -9,10 +9,11 @@ The theory notes in this repository are self explanatory but requires prior know
 #####################################################################################
 
 DONE:
-- Simple visualization of controls on flight path but without considering exact equations.
+- Simple visualization of controls on flight path but without considering exact equations
 - Visualize with motion equations
+- Implement controls with MPC
 
 TODO:
-- Implement controls with MPC (80% completed).
+- Add obstacles to the objective function and frame the constraints related to it
 
 ####################################################################################
