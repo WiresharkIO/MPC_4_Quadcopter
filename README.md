@@ -12,8 +12,9 @@ DONE:
 - Simple visualization of controls on flight path but without considering exact equations
 - Visualize with motion equations
 - Implement controls with MPC
+- Add static obstacles to the objective function and frame the constraints related to it
 
 TODO:
-- Add obstacles to the objective function and frame the constraints related to it
+- Add dynamic obstacles to the objective function and frame the constraints related to it
 
 ####################################################################################
