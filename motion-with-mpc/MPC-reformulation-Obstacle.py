@@ -4,7 +4,6 @@ import numpy as np
 from numpy import pi, cos, sin, tan, square
 from casadi import vertcat, horzcat, sumsqr, Function, exp, vcat
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 
 dt       = 0.1              # time between steps in seconds (step_horizon)
 N        = 10               # number of look ahead steps
@@ -12,28 +11,24 @@ Nsim     = 25               # simulation time
 nx       = 8                # the system is composed of 8 states
 nu       = 4                # the system has 4 control inputs
 
-
 xf       = 1                # Final coordinate
-yf       = 0.5              # Final coordinate
+yf       = 0.8              # Final coordinate
 zf       = 1                # Final coordinate
 
 # Logging variables
 x_hist         = np.zeros((Nsim+1, N+1))
 y_hist         = np.zeros((Nsim+1, N+1))
 z_hist         = np.zeros((Nsim+1, N+1))
-
 phi_hist       = np.zeros((Nsim+1, N+1))
 
 vx_hist        = np.zeros((Nsim+1, N+1))
 vy_hist        = np.zeros((Nsim+1, N+1))
 vz_hist        = np.zeros((Nsim+1, N+1))
-
 vphi_hist      = np.zeros((Nsim+1, N+1))
 
 ux_hist         = np.zeros((Nsim+1, N+1))
 uy_hist         = np.zeros((Nsim+1, N+1))
 uz_hist         = np.zeros((Nsim+1, N+1))
-
 uphi_hist       = np.zeros((Nsim+1, N+1))
 
 # Drone model from reference paper
@@ -93,28 +88,16 @@ ocp.set_value(p0, p0_coord)
 r0 = 0.1
 
 p1 = ocp.parameter(2)
-x1, y1 = 0.1, 0.8
+x1, y1 = 0.8, 0.2
 p1_coord = vertcat(x1,y1)
 ocp.set_value(p1, p1_coord)
 r1 = 0.1
 
 p2 = ocp.parameter(2)
-x2, y2 = 0.4, 0.3
+x2, y2 = 0.8, 0.8
 p2_coord = vertcat(x2,y2)
 ocp.set_value(p2, p2_coord)
 r2 = 0.1
-
-p3 = ocp.parameter(2)
-x3, y3 = 0.8, 0.2
-p3_coord = vertcat(x3,y3)
-ocp.set_value(p3, p3_coord)
-r3 = 0.1
-
-p4 = ocp.parameter(2)
-x4, y4 = 0.8, 0.8
-p4_coord = vertcat(x4,y4)
-ocp.set_value(p4, p4_coord)
-r4 = 0.1
 
 # a point in 3D
 p = vertcat(x,y,z)
@@ -123,8 +106,6 @@ p = vertcat(x,y,z)
 ocp.subject_to( sumsqr(p[0:2] - p0)  >  (r0)**2 )
 ocp.subject_to( sumsqr(p[0:2] - p1)  >  (r1)**2 )
 ocp.subject_to( sumsqr(p[0:2] - p2)  >  (r2)**2 )
-ocp.subject_to( sumsqr(p[0:2] - p3)  >  (r3)**2 )
-ocp.subject_to( sumsqr(p[0:2] - p4)  >  (r4)**2 )
 
 # Define initial parameter
 X_0 = ocp.parameter(nx)
@@ -158,7 +139,6 @@ slack_tf_z = ocp.variable()
 ocp.subject_to(slack_tf_x >= 0)
 ocp.subject_to(slack_tf_y >= 0)
 ocp.subject_to(slack_tf_z >= 0)
-
 ocp.subject_to((ocp.at_tf(x) - pf[0]) <= slack_tf_x)
 ocp.subject_to((ocp.at_tf(y) - pf[1]) <= slack_tf_y)
 ocp.subject_to((ocp.at_tf(z) - pf[2]) <= slack_tf_z)
@@ -171,10 +151,9 @@ we define a shared slack variable for all the ellipsoidal
 obstacles, with the cost:
 """
 ocp.add_objective(10*(slack_tf_x**2 + slack_tf_y**2 + slack_tf_z**2))
+
 #---------------- constraints on velocity ---------------------------------
-
 v_final = vertcat(0,0,0,0)
-
 ocp.subject_to(ocp.at_tf(vx) == 0)
 ocp.subject_to(ocp.at_tf(vy) == 0)
 ocp.subject_to(ocp.at_tf(vz) == 0)
@@ -188,7 +167,6 @@ ocp.add_objective((1e-6)*ocp.integral(sumsqr(ux + uy + uz + uphi)))
 
 #-------------------------  Pick a solution method: ipopt --------------------
 options = {"ipopt": {"print_level": 0}}
-# options = {'ipopt': {"max_iter": 1000, 'hessian_approximation':'limited-memory', 'limited_memory_max_history' : 5, 'tol':1e-3}}
 options["expand"] = True
 options["print_time"] = True
 ocp.solver('ipopt', options)
@@ -198,27 +176,27 @@ ocp.solver('ipopt', options)
 ocp.method(MultipleShooting(N=N, M=2, intg='rk') )
 
 #-------------------- Set initial-----------------
-ux_init = np.ones(N)
-uy_init = np.ones(N)
-uz_init = np.zeros(N)
-uphi_init = np.zeros(N)
+ux_init     = np.ones(N)
+uy_init     = np.ones(N)
+uz_init     = np.zeros(N)
+uphi_init   = np.zeros(N)
 
-vx_init = np.empty(N)
-vx_init[0] = 0
-vy_init = np.empty(N)
-vy_init[0] = 0
-vz_init = np.empty(N)
-vz_init[0] = 0
-vphi_init = np.empty(N)
-vphi_init[0] = 0
+vx_init         = np.empty(N)
+vx_init[0]      = 0
+vy_init         = np.empty(N)
+vy_init[0]      = 0
+vz_init         = np.empty(N)
+vz_init[0]      = 0
+vphi_init       = np.empty(N)
+vphi_init[0]    = 0
 
-x_init = np.empty(N)
-x_init[0] = 0
-y_init = np.empty(N)
-y_init[0] = 0
-z_init = np.empty(N)
-z_init[0] = 0
-phi_init = np.empty(N)
+x_init      = np.empty(N)
+x_init[0]   = 0
+y_init      = np.empty(N)
+y_init[0]   = 0
+z_init      = np.empty(N)
+z_init[0]   = 0
+phi_init    = np.empty(N)
 phi_init[0] = 0
 
 for i in range(1,N):
@@ -231,7 +209,6 @@ for i in range(1,N):
     z_init[i]   = z_init[i-1] + vz_init[i-1]*dt
     x_init[i]   = x_init[i-1] + ((vx_init[i-1]*cos(phi_init[i-1])) - (vy_init[i-1]*sin(phi_init[i-1])))*dt
     y_init[i]   = y_init[i-1] + ((vx_init[i-1]*sin(phi_init[i-1])) + (vy_init[i-1]*cos(phi_init[i-1])))*dt
-
 
 ocp.set_initial(x, x_init)
 ocp.set_initial(y, y_init)
@@ -264,18 +241,18 @@ except:
 Sim_system_dyn = ocp._method.discrete_system(ocp)
 
 # ----------------------- Log data for post-processing---------------------
-t_sol, x_sol = sol.sample(x, grid='control')
-t_sol, y_sol = sol.sample(y, grid='control')
-t_sol, z_sol = sol.sample(z, grid='control')
-t_sol, phi_sol = sol.sample(phi, grid='control')
-t_sol, vx_sol = sol.sample(vx, grid='control')
-t_sol, vy_sol = sol.sample(vy, grid='control')
-t_sol, vz_sol = sol.sample(vz, grid='control')
+t_sol, x_sol    = sol.sample(x, grid='control')
+t_sol, y_sol    = sol.sample(y, grid='control')
+t_sol, z_sol    = sol.sample(z, grid='control')
+t_sol, phi_sol  = sol.sample(phi, grid='control')
+t_sol, vx_sol   = sol.sample(vx, grid='control')
+t_sol, vy_sol   = sol.sample(vy, grid='control')
+t_sol, vz_sol   = sol.sample(vz, grid='control')
 t_sol, vphi_sol = sol.sample(vphi, grid='control')
 
-t_sol, ux_sol = sol.sample(ux, grid='control')
-t_sol, uy_sol = sol.sample(uy, grid='control')
-t_sol, uz_sol = sol.sample(uz, grid='control')
+t_sol, ux_sol   = sol.sample(ux, grid='control')
+t_sol, uy_sol   = sol.sample(uy, grid='control')
+t_sol, uz_sol   = sol.sample(uz, grid='control')
 t_sol, uphi_sol = sol.sample(uphi, grid='control')
 
 t_sol, sx_sol      = sol.sample(slack_tf_x,        grid='control')
@@ -297,7 +274,7 @@ print(current_X[2])
 
 # plot function
 # DISABLED CALLING FOR NOW - ENABLE CALLING FOR PLOT
-def plotxy(p0_coord, p1_coord, p2_coord, p3_coord, p4_coord, x_hist_1, y_hist_1, opt, x_sol, y_sol):
+def plotxy(p0_coord, p1_coord, p2_coord, opt, x_sol, y_sol):
     # x-y plot
     fig = plt.figure(dpi=300)
     ax = fig.add_subplot(111)
@@ -311,10 +288,9 @@ def plotxy(p0_coord, p1_coord, p2_coord, p3_coord, p4_coord, x_hist_1, y_hist_1,
 
     ts = np.linspace(0, 2 * pi, 1000)
     plt.plot(p0_coord[0] + r0 * cos(ts), p0_coord[1] + r0 * sin(ts), 'r-')
+    plt.plot(p0_coord[0] + r0 * cos(ts), p0_coord[1] + r0 * sin(ts), 'r-')
     plt.plot(p1_coord[0] + r1 * cos(ts), p1_coord[1] + r1 * sin(ts), 'b-')
     plt.plot(p2_coord[0] + r2 * cos(ts), p2_coord[1] + r2 * sin(ts), 'g-')
-    plt.plot(p3_coord[0] + r3 * cos(ts), p3_coord[1] + r3 * sin(ts), 'c-')
-    plt.plot(p4_coord[0] + r4 * cos(ts), p4_coord[1] + r4 * sin(ts), 'k-')
     plt.plot(xf, yf, 'ro', markersize=10)
 
     if opt == 1:
@@ -325,28 +301,25 @@ def plotxy(p0_coord, p1_coord, p2_coord, p3_coord, p4_coord, x_hist_1, y_hist_1,
     plt.show(block=True)
 
 # Simulate the MPC solving the OCP
-clearance_v = 1e-5  # should become lower if possible
-clearance = 1e-3
+clearance_v         = 1e-5  # should become lower if possible
+clearance           = 1e-3
 local_min_clearance = 1e-1
 i = 0
 
 obs_hist_0  = np.zeros((Nsim+1, 3))
 obs_hist_1  = np.zeros((Nsim+1, 3))
 obs_hist_2  = np.zeros((Nsim+1, 3))
-obs_hist_3  = np.zeros((Nsim+1, 3))
-obs_hist_4  = np.zeros((Nsim+1, 3))
 
 intermediate_points = []
 intermediate_points_required = False
 new_path_not_needed = False
 intermediate_points_index = 0
 is_stuck = False
-
 t_tot = 0
 
 while True:
     print("timestep", i + 1, "of", Nsim)
-    plotxy(p0_coord, p1_coord, p2_coord, p3_coord, p4_coord, x_hist[0:i,0], y_hist[0:i,0], 1, x_sol, y_sol)
+    plotxy(p0_coord, p1_coord, p2_coord, 1, x_sol, y_sol)
     ux_hist[i, :]   = ux_sol
     uy_hist[i, :]   = uy_sol
     uz_hist[i, :]   = uz_sol
@@ -371,14 +344,6 @@ while True:
     obs_hist_2[i, 1] = y2
     obs_hist_2[i, 2] = r2
 
-    obs_hist_3[i, 0] = x3
-    obs_hist_3[i, 1] = y3
-    obs_hist_3[i, 2] = r3
-
-    obs_hist_4[i, 0] = x4
-    obs_hist_4[i, 1] = y4
-    obs_hist_4[i, 2] = r4
-
     print(f' x: {current_X[0]}')
     print(f' y: {current_X[1]}')
     print(f' z: {current_X[2]}')
@@ -395,14 +360,6 @@ while True:
         print('outside obs 3')
     else:
         print('Problem! inside obs 3')
-    if (sumsqr(current_X[0:2] - p3_coord) - r3 ** 2) > 0:
-        print('outside obs 4')
-    else:
-        print('Problem! inside obs 4')
-    if (sumsqr(current_X[0:2] - p4_coord) - r4 ** 2) > 0:
-        print('outside obs 5')
-    else:
-        print('Problem! inside obs 5')
 
     error_v = sumsqr(current_X[4:8] - v_final)
 
