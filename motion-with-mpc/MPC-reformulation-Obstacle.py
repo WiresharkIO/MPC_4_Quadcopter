@@ -82,7 +82,7 @@ ocp.subject_to(-1 <= (uphi  <= 1))
 
 # Adding obstacles - Physical structure round - ADDED and alterable
 p0 = ocp.parameter(2)
-x0, y0 = 0.0, 0.3
+x0, y0 = 0.5, 0.5
 p0_coord = vertcat(x0,y0)
 ocp.set_value(p0, p0_coord)
 r0 = 0.1
@@ -94,7 +94,7 @@ ocp.set_value(p1, p1_coord)
 r1 = 0.1
 
 p2 = ocp.parameter(2)
-x2, y2 = 0.8, 0.8
+x2, y2 = 0.3, 0.5
 p2_coord = vertcat(x2,y2)
 ocp.set_value(p2, p2_coord)
 r2 = 0.1
@@ -127,30 +127,6 @@ Set a value for a parameter
 All variables must be given a value before an optimal control problem can be solved.
 """
 ocp.set_value(pf, p_final) # p_final assigned to pf before solving the OCP
-
-"""
-slack variable, that relaxes the constraint with sensitivity to guarantee
-feasible solutions in tight situations.
-"""
-slack_tf_x = ocp.variable()
-slack_tf_y = ocp.variable()
-slack_tf_z = ocp.variable()
-
-ocp.subject_to(slack_tf_x >= 0)
-ocp.subject_to(slack_tf_y >= 0)
-ocp.subject_to(slack_tf_z >= 0)
-ocp.subject_to((ocp.at_tf(x) - pf[0]) <= slack_tf_x)
-ocp.subject_to((ocp.at_tf(y) - pf[1]) <= slack_tf_y)
-ocp.subject_to((ocp.at_tf(z) - pf[2]) <= slack_tf_z)
-
-"""
-Soft constraints has the main drawback of increasing
-the computational cost because of the slack variables. To
-mitigate this effect when dealing with multiple obstacles,
-we define a shared slack variable for all the ellipsoidal
-obstacles, with the cost:
-"""
-ocp.add_objective(10*(slack_tf_x**2 + slack_tf_y**2 + slack_tf_z**2))
 
 #---------------- constraints on velocity ---------------------------------
 v_final = vertcat(0,0,0,0)
@@ -254,10 +230,6 @@ t_sol, ux_sol   = sol.sample(ux, grid='control')
 t_sol, uy_sol   = sol.sample(uy, grid='control')
 t_sol, uz_sol   = sol.sample(uz, grid='control')
 t_sol, uphi_sol = sol.sample(uphi, grid='control')
-
-t_sol, sx_sol      = sol.sample(slack_tf_x,        grid='control')
-t_sol, sy_sol      = sol.sample(slack_tf_y,        grid='control')
-t_sol, sz_sol      = sol.sample(slack_tf_z,        grid='control')
 
 x_hist[0, :] = x_sol
 y_hist[0, :] = y_sol
@@ -412,10 +384,6 @@ while True:
     t_sol, uy_sol = sol.sample(uy, grid='control')
     t_sol, uz_sol = sol.sample(uz, grid='control')
     t_sol, uphi_sol = sol.sample(uphi, grid='control')
-
-    t_sol, sx_sol = sol.sample(slack_tf_x, grid='control')
-    t_sol, sy_sol = sol.sample(slack_tf_y, grid='control')
-    t_sol, sz_sol = sol.sample(slack_tf_z, grid='control')
 
     x_hist[i + 1, :] = x_sol
     y_hist[i + 1, :] = y_sol
