@@ -15,6 +15,8 @@ DONE:
 - Add static obstacles to the objective function and frame the constraints related to it
 
 TODO:
-- Add dynamic obstacles to the objective function and frame the constraints related to it
+- Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
+- Integrate MPC formulation with Crazy-flie client.
+- Add dynamic obstacles to the objective function and frame the constraints related to it.
 
 ####################################################################################
