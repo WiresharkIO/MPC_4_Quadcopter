@@ -13,10 +13,10 @@ DONE:
 - Visualize with motion equations
 - Implement controls with MPC
 - Add static obstacles to the objective function and frame the constraints related to it
+- Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
 
 TODO:
-- Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
-- Integrate MPC formulation with Crazy-flie client.
-- Add dynamic obstacles to the objective function and frame the constraints related to it.
+- Integrate MPC formulation with Crazy-flie client(50% done)
+- Add dynamic obstacles to the objective function and frame the constraints related to it
 
 ####################################################################################
