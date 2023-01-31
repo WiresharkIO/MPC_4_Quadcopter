@@ -14,6 +14,8 @@ DONE:
 - Implement controls with MPC
 - Add static obstacles to the objective function and frame the constraints related to it
 - Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
+- Tested velocity commands with Flowdeck and Multiranger
+- Tested and callibrated positions with Lighthouse positioning system
 
 TODO:
 - Integrate MPC formulation with Crazy-flie client(50% done)
