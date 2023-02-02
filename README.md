@@ -9,8 +9,6 @@ Discussion/Problems:
 1. https://github.com/orgs/bitcraze/discussions/528#discussion-4776334
 2. https://github.com/orgs/bitcraze/discussions/535#discussion-4795575
 
-#####################################################################################
-
 DONE:
 - Simple visualization of controls on flight path but without considering exact equations
 - Visualize with motion equations
@@ -23,5 +21,3 @@ DONE:
 TODO:
 - Integrate MPC formulation with Crazy-flie client(50% done)
 - Add dynamic obstacles to the objective function and frame the constraints related to it
-
-####################################################################################
