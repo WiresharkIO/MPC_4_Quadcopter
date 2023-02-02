@@ -5,18 +5,19 @@ This repository contains information and contents for flight control.
 
 The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
 
-
-#####################################################################################
+Discussion/Problems:
+1. https://github.com/orgs/bitcraze/discussions/528#discussion-4776334
+2. https://github.com/orgs/bitcraze/discussions/535#discussion-4795575
 
 DONE:
 - Simple visualization of controls on flight path but without considering exact equations
 - Visualize with motion equations
 - Implement controls with MPC
 - Add static obstacles to the objective function and frame the constraints related to it
+- Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
+- Tested velocity commands with Flowdeck and Multiranger
+- Tested and callibrated positions with Lighthouse positioning system
 
 TODO:
-- Operate crazy-flie drone in pitch-roll invariant frame.(Literature)
-- Integrate MPC formulation with Crazy-flie client.
-- Add dynamic obstacles to the objective function and frame the constraints related to it.
-
-####################################################################################
+- Integrate MPC formulation with Crazy-flie client(50% done)
+- Add dynamic obstacles to the objective function and frame the constraints related to it
