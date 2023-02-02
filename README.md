@@ -5,6 +5,9 @@ This repository contains information and contents for flight control.
 
 The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
 
+Discussion/Problems:
+1. https://github.com/orgs/bitcraze/discussions/528#discussion-4776334
+2. https://github.com/orgs/bitcraze/discussions/535#discussion-4795575
 
 #####################################################################################
 
