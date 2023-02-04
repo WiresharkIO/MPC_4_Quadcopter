@@ -1,9 +1,11 @@
 from rockit import MultipleShooting, Ocp
-from casadi import vertcat, sumsqr, vcat, vertsplit
+from casadi import vertcat, sumsqr, vcat, vertsplit, DM, MX
 from roblib import *
-
+from cflib.positioning.motion_commander import MotionCommander
 # from cflib.crazyflie.Test_My_Code import position_callback
-from cflib.crazyflie.Test_My_Code import sendControl
+# from cflib.crazyflie.Test_My_Code import sendControl
+from cflib.crazyflie.Test_My_Code import sequence_with_LPS
+from cflib.crazyflie.Test_My_Code import position_callback
 
 dt       = 0.1              # time between steps in seconds (step_horizon)
 N        = 10               # number of look ahead steps
@@ -164,6 +166,7 @@ t_sol, uy_sol   = sol.sample(uy, grid='control')
 t_sol, uz_sol   = sol.sample(uz, grid='control')
 t_sol, uphi_sol = sol.sample(uphi, grid='control')
 
+
 # Simulate the MPC solving the OCP
 clearance_v         = 1e-5  # should become lower if possible
 clearance           = 1e-3
@@ -174,18 +177,18 @@ is_stuck = False
 t_tot = 0
 
 def DM2List(U):
+    # print(type(U))
     q=[]
     for i in vertsplit(U,1):
-        q.append(i)
-        # U=np.array(U.full())
-    return q
-
+        q.append(DM.__float__(i))
+    # print(type(q[0]), type(q[1]), type(q[2]), type(q[3]))
+    return q[0], q[1], q[2], q[3]
 while True:
     print("timestep", i + 1, "of", Nsim)
     # Combine first control inputs
     current_U = vertcat(ux_sol[0], uy_sol[0], uz_sol[0], uphi_sol[0])
+    # sequence_with_LPS(DM2List(current_U))
     # DM2List(current_U)
-    sendControl(DM2List(current_U))
     current_X = Sim_system_dyn(x0=current_X, u=current_U, T=dt)["xf"]
 
     t_tot = t_tot + dt
@@ -239,6 +242,10 @@ while True:
     t_sol, uz_sol   = sol.sample(uz, grid='control')
     t_sol, uphi_sol = sol.sample(uphi, grid='control')
 
+    U=DM2List(current_U)
+    # print(type(U[0]), U[0])
+    MotionCommander.start_linear_motion(U[0], U[1], U[2], U[3])
+    # sequence_with_LPS(DM2List(current_U))
     # Initial guess
     ocp.set_initial(x, x_sol)
     ocp.set_initial(y, y_sol)
