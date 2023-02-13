@@ -2,6 +2,7 @@ from rockit import MultipleShooting, Ocp
 from casadi import vertcat, sumsqr, vcat, vertsplit, DM, MX
 from roblib import *
 from cflib.positioning.motion_commander import MotionCommander
+import time
 # from cflib.crazyflie.Test_My_Code import position_callback
 # from cflib.crazyflie.Test_My_Code import sendControl
 from cflib.crazyflie.Test_My_Code import sequence_with_LPS
@@ -18,14 +19,23 @@ from cflib.crazyflie.log import LogConfig
 # Driver initialization
 def call_MPC():
 
-    dt       = 0.1              # time between steps in seconds (step_horizon)
-    N        = 10               # number of look ahead steps
-    Nsim     = 35               # simulation time
-    nx       = 8                # the system is composed of 8 states
-    nu       = 4                # the system has 4 control inputs
-    xf       = 0.5              # Final coordinate
-    yf       = 0.5              # Final coordinate
-    zf       = 0.5              # Final coordinate
+    # dt       = 0.1            # time between steps in seconds (step_horizon)
+    # N        = 10             # number of look ahead steps
+    # Nsim     = 20             # simulation time
+    # nx       = 8              # the system is composed of 8 states
+    # nu       = 4              # the system has 4 control inputs
+    # xf       = 1.5            # Final coordinate
+    # yf       = 1.5            # Final coordinate
+    # zf       = 1.5            # Final coordinate
+
+    dt = 0.1  # time between steps in seconds (step_horizon)
+    N = 8  # number of look ahead steps
+    Nsim = 20  # simulation time
+    nx = 8  # the system is composed of 8 states
+    nu = 4  # the system has 4 control inputs
+    xf = 0.5  # Final coordinate
+    yf = 0.5  # Final coordinate
+    zf = 0.5  # Final coordinate
 
     k_x      = 1
     k_y      = 1
@@ -60,10 +70,10 @@ def call_MPC():
     ocp.set_der(vz  ,   (-vz + k_z*uz)/tau_z)
     ocp.set_der(vphi,   (-vphi + k_phi*uphi)/tau_phi)
 
-    ocp.subject_to(-0.4 <= (ux    <= 0.3))
-    ocp.subject_to(-0.4 <= (uy    <= 0.3))
-    ocp.subject_to(-0.4 <= (uz    <= 0.3))
-    ocp.subject_to(-0.4 <= (uphi  <= 0.3))
+    ocp.subject_to(-0.5 <= (ux    <= 0.5))
+    ocp.subject_to(-0.5 <= (uy    <= 0.5))
+    ocp.subject_to(-0.5 <= (uz    <= 0.5))
+    ocp.subject_to(-0.5 <= (uphi  <= 0.5))
 
     # a point in 3D
     p = vertcat(x,y,z)
@@ -74,9 +84,13 @@ def call_MPC():
 
     # Initial point
     ocp.subject_to(ocp.at_t0(X) == X_0)
-    ocp.subject_to( 0  <=  (x    <= 2))
-    ocp.subject_to( 0  <=  (y    <= 2))
-    ocp.subject_to( 0  <=  (z    <= 2))
+    # ocp.subject_to( 0  <=  (x    <= 2))
+    # ocp.subject_to( 0  <=  (y    <= 2))
+    # ocp.subject_to( 0  <=  (z    <= 2))
+
+    ocp.subject_to(-0.2 <= (x <= 1.2)) # reduce
+    ocp.subject_to(-0.2 <= (y <= 1.2))
+    ocp.subject_to(-0.2 <= (z <= 1.2))
 
     # reach end point
     pf = ocp.parameter(3)
@@ -107,6 +121,7 @@ def call_MPC():
     uy_init     = np.ones(N)
     uz_init     = np.zeros(N)
     uphi_init   = np.zeros(N)
+
 
     vx_init         = np.empty(N)
     vx_init[0]      = 0
@@ -191,17 +206,31 @@ def call_MPC():
         for i in vertsplit(U,1):
             q.append(DM.__float__(i))
         return q
+    # return [float(i) for i in vertsplit(U, 1)] - optimized
 
+    def DM2Tuple_state(X1, X2, X3):
+        q = []
+        q.append(DM.__float__(X1))
+        q.append(DM.__float__(X2))
+        q.append(DM.__float__(X3))
+        return q
+    # return [float(X1), float(X2), float(X3)] - optimized
+
+    listReadBack=[]
     def position_callback(timestamp, data, logconf):
+        listReadBack=[]
         x1 = data['kalman.stateX']
         y1 = data['kalman.stateY']
         z1 = data['kalman.stateZ']
-        # Intermediate States to MPC
-        return(x, y, z)
+        listReadBack.append(x1)
+        listReadBack.append(y1)
+        listReadBack.append(z1)
+        print("Printed In Callback", 'pos: ({}, {}, {})'.format(x1, y1, z1))
+
         # print('pos: ({}, {}, {})'.format(x1, y1, z1))
 
     def start_position_printing(scf):
-        log_conf = LogConfig(name='Position', period_in_ms=10)
+        log_conf = LogConfig(name='Position', period_in_ms=500)
         log_conf.add_variable('kalman.stateX', 'float')
         log_conf.add_variable('kalman.stateY', 'float')
         log_conf.add_variable('kalman.stateZ', 'float')
@@ -210,26 +239,30 @@ def call_MPC():
         log_conf.data_received_cb.add_callback(position_callback)
         log_conf.start()
 
+    """
+        ITERATION HANDLING - RUNS TILL THE END OF COMPUTATION
+    """
     while True:
         print("timestep", i + 1, "of", Nsim)
         # Combine first control inputs
         current_U = vertcat(ux_sol[0], uy_sol[0], uz_sol[0], uphi_sol[0])
         U = DM2Tuple_control(current_U)
-        # X=DM2Tuple(current_X)
         # print(U[0], U[1], U[2], U[3])
         # scf.cf.commander.send_velocity_world_setpoint(U[0], U[1], U[2], U[3])
         scf.cf.commander.send_hover_setpoint(U[0], U[1], U[3], 0.5)
-        time.sleep(0.3)
+        time.sleep(0.04)
         # scf.cf.commander.send_position_setpoint(X[0], X[1], X[2], X[3])
         # mc.start_linear_motion(U[0],
         #                        U[1],
         #                        U[2],
         #                        U[3])
-        # New_State=start_position_printing(scf)
-        # for i in range(3):
-        #     current_X[i]=New_State[i]
+        # time.sleep(0.03)
+        start_position_printing(scf)
+
+        # print("Printed in Loop", listReadBack)
 
         current_X = Sim_system_dyn(x0=current_X, u=current_U, T=dt)["xf"]
+        # DM2Tuple_state(current_X[0], current_X[1], current_X[2])
 
         t_tot = t_tot + dt
         print(f' x: {current_X[0]}')
@@ -256,7 +289,7 @@ def call_MPC():
                 print('Intermediate point reached! Diverting to next point.')
                 intermediate_points_index = intermediate_points_index + 1
                 ocp.set_value(pf, vcat(intermediate_points[intermediate_points_index - 1]))
-
+        start = time.time()
         # Set the parameter X0 to the new current_X
         ocp.set_value(X_0, current_X)
 
@@ -293,6 +326,8 @@ def call_MPC():
         ocp.set_initial(vz, vz_sol)
         ocp.set_initial(vphi, vphi_sol)
         print()
+        end=time.time()
+        print("Time using time module:", (end-start))
         i = i + 1
         print(f'Total execution time is: {t_tot}')
 
@@ -302,7 +337,7 @@ if __name__ == '__main__':
     cf = Crazyflie(rw_cache='./cache')
     uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
     with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
-        # with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
+        with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
     # with Commander() as c:
-        cf = scf.cf
-        call_MPC()
+            cf = scf.cf
+            call_MPC()
