@@ -1,9 +1,9 @@
 # Flight-Control
 This repository contains information and contents for flight control.
 
-Abbreviations
-MPC - Model Predictive Control 
-CF - Crazy-Flie drone module
+Abbreviations:
+- MPC - Model Predictive Control 
+- CF - Crazy-Flie drone module
 
 ![image](https://user-images.githubusercontent.com/14985440/209779929-f99364ab-e37d-41b7-8ba9-7d6061df09ba.png)
 
