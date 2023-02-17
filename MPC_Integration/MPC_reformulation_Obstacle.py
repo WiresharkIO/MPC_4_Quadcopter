@@ -7,6 +7,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
 from cflib.crazyflie.log import LogConfig
+from cflib.positioning.motion_commander import MotionCommander
 
 
 # MPC - Model and Implementation
@@ -56,10 +57,17 @@ def call_mpc():
     ocp.set_der(vz,  (-vz + k_z*uz)/tau_z)
     ocp.set_der(vphi, (-vphi + k_phi*uphi)/tau_phi)
 
-    ocp.subject_to(-0.2 <= (ux <= 0.2))
-    ocp.subject_to(-0.2 <= (uy <= 0.2))
-    ocp.subject_to(-0.2 <= (uz <= 0.2))
-    ocp.subject_to(-0.2 <= (uphi <= 0.2))
+    ocp.subject_to(-0.4 <= (ux <= 0.4))
+    ocp.subject_to(-0.4 <= (uy <= 0.4))
+    ocp.subject_to(-0.4 <= (uz <= 0.4))
+    ocp.subject_to(-0.4 <= (uphi <= 0.4))
+
+    # obstacle
+    p0 = ocp.parameter(3)
+    x0, y0, z0 = 0.3, 0.2, 0.3
+    p0_coord = vertcat(x0, y0, z0)
+    ocp.set_value(p0, p0_coord)
+    r0 = 0.02
 
     # a point in 3D
     p = vertcat(x,y,z)
@@ -106,35 +114,34 @@ def call_mpc():
     uz_init = np.zeros(N)
     uphi_init = np.zeros(N)
 
+    vx_init = np.empty(N)
+    vx_init[0] = 0
+    vy_init = np.empty(N)
+    vy_init[0] = 0
+    vz_init = np.empty(N)
+    vz_init[0] = 0
+    vphi_init = np.empty(N)
+    vphi_init[0] = 0
 
-    vx_init         = np.empty(N)
-    vx_init[0]      = 0
-    vy_init         = np.empty(N)
-    vy_init[0]      = 0
-    vz_init         = np.empty(N)
-    vz_init[0]      = 0
-    vphi_init       = np.empty(N)
-    vphi_init[0]    = 0
-
-    x_init          = np.empty(N)
-    x_init[0]       = 0
-    y_init          = np.empty(N)
-    y_init[0]       = 0
-    z_init          = np.empty(N)
-    z_init[0]       = 0
-    phi_init        = np.empty(N)
-    phi_init[0]     = 0
+    x_init = np.empty(N)
+    x_init[0] = 0
+    y_init = np.empty(N)
+    y_init[0] = 0
+    z_init = np.empty(N)
+    z_init[0] = 0
+    phi_init = np.empty(N)
+    phi_init[0] = 0
 
     for i in range(1,N):
-        vx_init[i]   = vx_init[i-1] + ux_init[i-1]*dt
-        vy_init[i]   = vy_init[i-1] + uy_init[i-1]*dt
-        vz_init[i]   = vz_init[i-1] + uz_init[i-1]*dt
+        vx_init[i] = vx_init[i-1] + ux_init[i-1]*dt
+        vy_init[i] = vy_init[i-1] + uy_init[i-1]*dt
+        vz_init[i] = vz_init[i-1] + uz_init[i-1]*dt
         vphi_init[i] = vphi_init[i-1] + uphi_init[i-1]*dt
 
-        phi_init[i]  = phi_init[i-1] + vphi_init[i-1]*dt
-        z_init[i]    = z_init[i-1] + vz_init[i-1]*dt
-        x_init[i]    = x_init[i-1] + ((vx_init[i-1]*cos(phi_init[i-1])) - (vy_init[i-1]*sin(phi_init[i-1])))*dt
-        y_init[i]    = y_init[i-1] + ((vx_init[i-1]*sin(phi_init[i-1])) + (vy_init[i-1]*cos(phi_init[i-1])))*dt
+        phi_init[i] = phi_init[i-1] + vphi_init[i-1]*dt
+        z_init[i] = z_init[i-1] + vz_init[i-1]*dt
+        x_init[i] = x_init[i-1] + ((vx_init[i-1]*cos(phi_init[i-1])) - (vy_init[i-1]*sin(phi_init[i-1])))*dt
+        y_init[i] = y_init[i-1] + ((vx_init[i-1]*sin(phi_init[i-1])) + (vy_init[i-1]*cos(phi_init[i-1])))*dt
 
     ocp.set_initial(x, x_init)
     ocp.set_initial(y, y_init)
@@ -162,24 +169,25 @@ def call_mpc():
     Sim_system_dyn = ocp._method.discrete_system(ocp)
 
     # Log data for post-processing
-    t_sol, x_sol    = sol.sample(x, grid='control')
-    t_sol, y_sol    = sol.sample(y, grid='control')
-    t_sol, z_sol    = sol.sample(z, grid='control')
-    t_sol, phi_sol  = sol.sample(phi, grid='control')
-    t_sol, vx_sol   = sol.sample(vx, grid='control')
-    t_sol, vy_sol   = sol.sample(vy, grid='control')
-    t_sol, vz_sol   = sol.sample(vz, grid='control')
+    t_sol, x_sol = sol.sample(x, grid='control')
+    t_sol, y_sol = sol.sample(y, grid='control')
+    t_sol, z_sol = sol.sample(z, grid='control')
+    t_sol, phi_sol = sol.sample(phi, grid='control')
+    t_sol, vx_sol = sol.sample(vx, grid='control')
+    t_sol, vy_sol = sol.sample(vy, grid='control')
+    t_sol, vz_sol = sol.sample(vz, grid='control')
     t_sol, vphi_sol = sol.sample(vphi, grid='control')
 
-    t_sol, ux_sol   = sol.sample(ux, grid='control')
-    t_sol, uy_sol   = sol.sample(uy, grid='control')
-    t_sol, uz_sol   = sol.sample(uz, grid='control')
+    t_sol, ux_sol = sol.sample(ux, grid='control')
+    t_sol, uy_sol = sol.sample(uy, grid='control')
+    t_sol, uz_sol = sol.sample(uz, grid='control')
     t_sol, uphi_sol = sol.sample(uphi, grid='control')
 
     # Simulate the MPC solving the OCP
-    clearance_v         = 1e-5
-    clearance           = 1e-3
+    clearance_v = 1e-5
+    clearance = 1e-3
     i = 0
+    obs_hist_0 = np.zeros((Nsim + 1, 4))
     intermediate_points = []
     intermediate_points_index = 0
     is_stuck = False
@@ -231,6 +239,12 @@ def call_mpc():
         current_X = Sim_system_dyn(x0=current_X, u=current_U, T=dt)["xf"]
 
         t_tot = t_tot + dt
+
+        if (sumsqr(current_X[0:3] - p0_coord) - r0 ** 2) >= 0:
+            print('outside obs 1')
+        else:
+            print('Problem! inside obs 1')
+
         error_v = sumsqr(current_X[4:8] - v_final)
         error = sumsqr(current_X[0:3] - p_final)
 
@@ -265,21 +279,21 @@ def call_mpc():
             break
 
         # Log data for post-processing
-        t_sol, vx_sol   = sol.sample(vx, grid='control')
-        t_sol, vy_sol   = sol.sample(vy, grid='control')
-        t_sol, vz_sol   = sol.sample(vz, grid='control')
+        t_sol, vx_sol = sol.sample(vx, grid='control')
+        t_sol, vy_sol = sol.sample(vy, grid='control')
+        t_sol, vz_sol = sol.sample(vz, grid='control')
         t_sol, vphi_sol = sol.sample(vphi, grid='control')
 
-        t_sol, ux_sol   = sol.sample(ux, grid='control')
-        t_sol, uy_sol   = sol.sample(uy, grid='control')
-        t_sol, uz_sol   = sol.sample(uz, grid='control')
+        t_sol, ux_sol = sol.sample(ux, grid='control')
+        t_sol, uy_sol = sol.sample(uy, grid='control')
+        t_sol, uz_sol = sol.sample(uz, grid='control')
         t_sol, uphi_sol = sol.sample(uphi, grid='control')
 
         # for plots
         x_values.append(locationReadBack[0])
         y_values.append(locationReadBack[1])
         z_values.append(locationReadBack[2])
-        # print(locationReadBack[0], locationReadBack[1], locationReadBack[2], locationReadBack[3])
+        print(locationReadBack[0], locationReadBack[1], locationReadBack[2], locationReadBack[3])
 
         # Initial guess
         ocp.set_initial(x, locationReadBack[0])
@@ -300,8 +314,10 @@ if __name__ == '__main__':
     init_drivers()
     locationReadBack = np.zeros(4)
     z_distance = 0.5
+    DEFAULT_HEIGHT=0.5
     cf = Crazyflie(rw_cache='./cache')
     uri = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
     with SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache')) as scf:
-        cf = scf.cf
-        call_mpc()
+        with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
+            cf = scf.cf
+            call_mpc()
