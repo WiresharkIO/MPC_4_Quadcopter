@@ -9,7 +9,6 @@ Abbreviations:
 
 The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
 
-Rockit
 The optimization software library used in this repository is Rockit. It is a specialized optimization library designed specifically for model predictive control (MPC) problems. It is built on top of CasADi and provides additional functionality for handling MPC-specific constraints and dynamics. Rockit includes a variety of methods for solving MPC problems, including multiple shooting and direct collocation.
 We use Multiple shooting method in this project.
 
