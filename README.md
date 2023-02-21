@@ -11,7 +11,7 @@ The theory notes in this repository are self explanatory but requires prior know
 
 ![PPT_1](https://user-images.githubusercontent.com/14985440/220335747-6c44d5d1-a7df-4ff1-866f-b1319e305e9f.png)
 
-considering - xfinal=0.5, yfinal=0.5, zfinal=0.5
+considering - xfinal=0.5, yfinal=0.6, zfinal=0.5
 
 Discussion/Problems:
 1. https://github.com/orgs/bitcraze/discussions/528#discussion-4776334
