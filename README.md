@@ -26,7 +26,8 @@ DONE:
 - Tested velocity commands with Flowdeck and Multiranger. (Testing)
 - Tested and callibrated positions with Lighthouse positioning system. (Testing)
 - Offline drone movement with MPC generated velocities with time-delays. (Testing)
+- Online drone manuever with state-estimation. (Testing) (Final reference reached is bit-inaccurate)
 
 TODO:
-- Online drone manuever with state-estimation. (30% DONE) (Testing)
+- Debug why, final reference state reached is invloved with inaccuracy.
 - Add dynamic obstacles to the objective function and frame the constraints related to it.
