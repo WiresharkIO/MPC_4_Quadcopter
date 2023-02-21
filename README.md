@@ -9,7 +9,7 @@ Abbreviations:
 
 The theory notes in this repository are self explanatory but requires prior knowledge of notations and exposure to control eqautions.
 
-![Test_1](https://user-images.githubusercontent.com/14985440/218905164-a6e35f50-f0a7-4ca4-9a3c-b34d3fbec9b9.png)
+![PPT_1](https://user-images.githubusercontent.com/14985440/220335747-6c44d5d1-a7df-4ff1-866f-b1319e305e9f.png)
 
 considering - xfinal=0.5, yfinal=0.5, zfinal=0.5
 
