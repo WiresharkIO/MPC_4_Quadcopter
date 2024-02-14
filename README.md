@@ -1,5 +1,5 @@
 # Flight-Control
-This repository contains information and contents for flight control.
+This repository contains information and contents for flight control and is supervised by prof. Moritz Diehl as a part of academics, University of Freiburg.
 
 Abbreviations:
 - MPC - Model Predictive Control 
